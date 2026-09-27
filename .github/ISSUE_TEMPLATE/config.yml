@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 本 fork 貢獻說明
+    url: https://github.com/SanHsien/draw-architecture/blob/main/CONTRIBUTING.md
+    about: overlay、Windows gate 與本線文件問題看這裡；產品 skill／viewer／scene 請去上游。
+  - name: 安全問題私下回報
+    url: https://github.com/SanHsien/draw-architecture/security/advisories/new
+    about: 漏洞、憑證或敏感資料問題不要建立公開 Issue。產品漏洞也可改回報上游。
+  - name: 上游原始專案
+    url: https://github.com/yulonghe97/draw-architecture
+    about: 產品 skill、viewer 模板、scene 格式與安裝器的問題，先確認是否也該回報原作者。

@@ -1,0 +1,83 @@
+name: Fork maintenance
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - FORK.md
+      - NOTICE.md
+      - REVIEW.md
+      - CLAUDE.md
+      - AGENTS.md
+      - README.md
+      - SECURITY.md
+      - CONTRIBUTING.md
+      - CODE_OF_CONDUCT.md
+      - CHANGELOG.md
+      - CHANGELOG.en.md
+      - docs/fork/**
+      - tools/**
+      - tests/**
+      - requirements-dev.txt
+      - pyproject.toml
+      - .cursor/**
+      - .github/workflows/fork-maintenance.yml
+      - .github/workflows/upstream-check.yml
+      - .github/workflows/*.yml
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fork-maintenance-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: fork gate (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    env:
+      PYTHONUTF8: "1"
+      PYTHONIOENCODING: utf-8
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.14"
+
+      - name: Set up Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "24"
+
+      - name: Install fork-gate dependencies
+        run: python -m pip install -r requirements-dev.txt
+
+      - name: Canonical fork gate
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: pwsh -NoProfile -File tools/dev_check.ps1
+
+      - name: Canonical fork gate
+        if: runner.os != 'Windows'
+        run: |
+          node scripts/validate.js examples/shoply-scene.js
+          node bin/cli.js --version
+          node bin/cli.js --help
+          python -m compileall -q tools tests
+          python -m ruff check --select E9,F tools tests
+          python -m pytest tests -q
+          python tools/check_links.py

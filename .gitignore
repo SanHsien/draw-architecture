@@ -1,0 +1,17 @@
+.DS_Store
+node_modules/
+.artifactcafe/
+
+# fork overlay (Python maintenance tools)
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+*.py[cod]
+upstream-review-report.md
+dependency-freshness-report.md
+.env*
+cookies.txt
+cookies.json
+credentials.json
+*.pem

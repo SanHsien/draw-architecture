@@ -1,0 +1,12 @@
+{
+  "repo": "https://github.com/yulonghe97/draw-architecture.git",
+  "branch": "main",
+  "reviewed_through": "0351ece763f79c5d76f249533bce5e43562f3058",
+  "reviewed_date": "2026-08-29",
+  "decision_log": "docs/fork/DECISIONS.md",
+  "reviewed_pr_through": 7,
+  "reviewed_issue_through": 0,
+  "notes": "Commit watermark is the fork starting point. Open PR #4 was read and skipped on 2026-08-28; no separate open issues. 2026-08-29：檢查器原本只讀 commit 水位，PR/issue 兩個欄位沒有程式讀——那兩個面向不是查過沒發現，是根本沒查。補上 --state all 的 PR/issue 收集與 fail-closed（比照 harness-guard），並用 gh 實查一次：上游共 7 個 PR、0 個 issue。#1/#2/#3/#5/#6/#7 都 merged，且 merge commit 都在 0351ece（= #7 的 merge，也是 upstream/main tip）以內，已由 commit 水位涵蓋；#4 仍 open，2026-08-28 已讀過並略過。issue 面向上游一筆都沒有，水位記 0 代表已查證為空，不是未查。",
+  "reviewed_pr_evidence": "gh pr list --repo yulonghe97/draw-architecture --state all → 7 筆，最大 #7；git log --oneline 0351ece..refs/upstream-check/main 為 0 筆，代表 commit 水位就是 upstream tip。",
+  "reviewed_issue_evidence": "gh issue list --repo yulonghe97/draw-architecture --state all → 0 筆。"
+}
