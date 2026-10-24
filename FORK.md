@@ -19,7 +19,7 @@
 | 項目 | 說明 |
 |---|---|
 | `README.md` | 上游英文產品說明 + 頂部 fork overlay。繁中維護在 `FORK.md`／`REVIEW.md` |
-| `AGENTS.md` / `CLAUDE.md` | 本 fork 的 AI 維護單一真相源 |
+| `AGENTS.md` | 本 fork 的 AI 維護單一真相源 |
 | `NOTICE.md` / `FORK.md` | 來源、授權與同步說明 |
 | `SECURITY.md` / `CONTRIBUTING.md` | 本線 overlay 問題走 SanHsien；產品貢獻與產品漏洞仍指向上游 |
 | `tools/dev_check.ps1` | Windows 本機一鍵 fork gate（含 example scene 驗證） |
