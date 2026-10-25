@@ -163,3 +163,32 @@ def test_shipped_baseline_records_every_branch_head_it_claims_to_have_read():
     heads = baseline.get("reviewed_branch_heads")
     assert heads, "branch axis has no watermark; it is not being watched"
     assert all(len(sha) == 40 for sha in heads.values())
+
+
+def test_report_lists_new_and_moved_branch_heads():
+    branches = [
+        {"name": "fix", "sha": "b" * 40, "short": "b" * 7, "previous": None},
+        {"name": "moved", "sha": "d" * 40, "short": "d" * 7, "previous": "c" * 40},
+    ]
+    report = checker.render_markdown(BASELINE, [], prs=[], issues=[], branches=branches)
+    assert "| `fix` | `bbbbbbb` | (new) |" in report
+    assert "| `moved` | `ddddddd` | `ccccccc` |" in report
+
+
+def test_strict_fails_when_only_a_branch_head_moved(monkeypatch, tmp_path):
+    """A moved branch is review work even when every other axis is clean."""
+    monkeypatch.setattr(checker, "load_baseline", lambda: dict(BASELINE))
+    monkeypatch.setattr(checker, "fetch_upstream", lambda baseline, repo_dir: "ref")
+    monkeypatch.setattr(checker, "collect_new_commits", lambda *args: [])
+    monkeypatch.setattr(checker, "collect_new_tickets", lambda baseline, kind: [])
+    monkeypatch.setattr(
+        checker,
+        "collect_branch_changes",
+        lambda baseline, repo_dir: [
+            {"name": "fix", "sha": "b" * 40, "short": "b" * 7, "previous": None}
+        ],
+    )
+    monkeypatch.setattr(
+        sys, "argv", ["check", "--strict", "--output", str(tmp_path / "r.md")]
+    )
+    assert checker.main() == 1
