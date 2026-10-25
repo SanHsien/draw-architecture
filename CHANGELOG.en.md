@@ -11,7 +11,7 @@ Per-commit adopt/skip reasoning is recorded in [`docs/fork/DECISIONS.md`](docs/f
 
 ---
 
-## 2026-10-25 (continued development)
+## 2026-10-25 (continued development, `46ae0c0`, `0ef829e`)
 
 ### Changed
 
