@@ -2,11 +2,19 @@
   "repo": "https://github.com/yulonghe97/draw-architecture.git",
   "branch": "main",
   "reviewed_through": "0351ece763f79c5d76f249533bce5e43562f3058",
-  "reviewed_date": "2026-08-29",
+  "reviewed_date": "2026-10-25",
   "decision_log": "docs/fork/DECISIONS.md",
   "reviewed_pr_through": 7,
   "reviewed_issue_through": 0,
   "notes": "Commit watermark is the fork starting point. Open PR #4 was read and skipped on 2026-08-28; no separate open issues. 2026-08-29：檢查器原本只讀 commit 水位，PR/issue 兩個欄位沒有程式讀——那兩個面向不是查過沒發現，是根本沒查。補上 --state all 的 PR/issue 收集與 fail-closed（比照 harness-guard），並用 gh 實查一次：上游共 7 個 PR、0 個 issue。#1/#2/#3/#5/#6/#7 都 merged，且 merge commit 都在 0351ece（= #7 的 merge，也是 upstream/main tip）以內，已由 commit 水位涵蓋；#4 仍 open，2026-08-28 已讀過並略過。issue 面向上游一筆都沒有，水位記 0 代表已查證為空，不是未查。",
   "reviewed_pr_evidence": "gh pr list --repo yulonghe97/draw-architecture --state all → 7 筆，最大 #7；git log --oneline 0351ece..refs/upstream-check/main 為 0 筆，代表 commit 水位就是 upstream tip。",
-  "reviewed_issue_evidence": "gh issue list --repo yulonghe97/draw-architecture --state all → 0 筆。"
+  "reviewed_issue_evidence": "gh issue list --repo yulonghe97/draw-architecture --state all → 0 筆。",
+  "reviewed_branch_heads": {
+    "smilewilson1999/npx-draw-architecture-cli": "b2a20173846d8634bd48a10810ed1c61e02f0d85",
+    "yulonghe97/dark-light-mode-switcher": "cfbe227e90324680f8e7f8c7f7f274aec448450b",
+    "yulonghe97/fix-download-button": "1d7414cec82e562e56a629879f7538799c865bc2",
+    "yulonghe97/npm-token-first-publish": "01f1ea1a9b4cb193980f03b9e1af805e328bcd57",
+    "yulonghe97/readme-install-guide": "d3d32d217f0a6713566c44b7b4f545848033d25e"
+  },
+  "reviewed_branch_evidence": "git ls-remote --heads → main 以外 5 條；git cherry upstream/main <branch> 全為 '-'（patch 已在 0351ece 內：#1/#2/#3/#5/#6）。"
 }

@@ -10,6 +10,15 @@
 
 ---
 
+## 2026-10-25（接續開發）
+
+### 變更
+
+- **上游檢查補分支面向。** `check_upstream_updates.py` 以 `git ls-remote --heads` 比對 `reviewed_branch_heads`，新分支或 head 移動才列出。
+- **ruff 0.17 以 `freshness-hold` 處理。** 只閘 E9／F，0.17.2 已驗證全綠；下限維持 `>=0.16`。
+
+---
+
 ## 2026-08-28（審查可修項落地）
 
 ### 變更

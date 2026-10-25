@@ -113,3 +113,53 @@ def test_upstream_slug(url, expected):
 def test_shipped_baseline_matches_the_documented_upstream():
     baseline = checker.load_baseline()
     assert checker.upstream_slug(baseline["repo"]) is not None
+
+
+def fake_ls_remote(heads: dict[str, str]):
+    """Stand in for `git ls-remote --heads`, so no test reaches the network."""
+
+    def runner(args, **kwargs):
+        assert args[:3] == ["git", "ls-remote", "--heads"]
+        stdout = "".join(f"{sha}\trefs/heads/{name}\n" for name, sha in heads.items())
+        return subprocess.CompletedProcess(args, 0, stdout=stdout, stderr="")
+
+    return runner
+
+
+def test_unrecorded_upstream_branch_is_reported(monkeypatch):
+    """A fix can sit on a branch with no PR; the commit axis never sees it."""
+    monkeypatch.setattr(
+        checker.subprocess,
+        "run",
+        fake_ls_remote({"main": "a" * 40, "fix-crash": "b" * 40}),
+    )
+    branches = checker.collect_branch_changes(BASELINE, REPO_ROOT)
+    assert [(b["name"], b["sha"], b["previous"]) for b in branches] == [
+        ("fix-crash", "b" * 40, None)
+    ]
+
+
+def test_branch_is_re_reported_only_when_its_head_moves(monkeypatch):
+    monkeypatch.setattr(
+        checker.subprocess,
+        "run",
+        fake_ls_remote({"main": "a" * 40, "same": "b" * 40, "moved": "d" * 40}),
+    )
+    baseline = {
+        **BASELINE,
+        "reviewed_branch_heads": {"same": "b" * 40, "moved": "c" * 40},
+    }
+    branches = checker.collect_branch_changes(baseline, REPO_ROOT)
+    assert [(b["name"], b["previous"]) for b in branches] == [("moved", "c" * 40)]
+
+
+def test_report_covers_the_branch_axis():
+    report = checker.render_markdown(BASELINE, [], prs=[], issues=[], branches=[])
+    assert "## Upstream branches" in report
+
+
+def test_shipped_baseline_records_every_branch_head_it_claims_to_have_read():
+    baseline = checker.load_baseline()
+    heads = baseline.get("reviewed_branch_heads")
+    assert heads, "branch axis has no watermark; it is not being watched"
+    assert all(len(sha) == 40 for sha in heads.values())

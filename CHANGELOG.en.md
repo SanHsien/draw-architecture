@@ -11,6 +11,15 @@ Per-commit adopt/skip reasoning is recorded in [`docs/fork/DECISIONS.md`](docs/f
 
 ---
 
+## 2026-10-25 (continued development)
+
+### Changed
+
+- **Upstream check covers branches.** `check_upstream_updates.py` compares `git ls-remote --heads` against `reviewed_branch_heads` and lists only new branches or moved heads.
+- **ruff 0.17 handled with `freshness-hold`.** Only E9/F are gated and 0.17.2 passes; the floor stays `>=0.16`.
+
+---
+
 ## 2026-08-28 (review remediations)
 
 ### Changed

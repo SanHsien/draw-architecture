@@ -1,2 +1,2 @@
 pytest>=9.1
-ruff>=0.16
+ruff>=0.16  # freshness-hold: 只閘 E9/F；0.17.2 已驗證 tools/、tests/ 全綠，下限維持最低相容版

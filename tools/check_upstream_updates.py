@@ -1,4 +1,4 @@
-"""Report upstream commits, pull requests, and issues this fork has not reviewed.
+"""Report upstream commits, pull requests, issues, and branches this fork has not reviewed.
 
 Commits are only one of the places upstream work shows up. A pull request can sit
 open for months with a fix in it, and an issue can describe a defect this fork also
@@ -8,6 +8,10 @@ carries its own watermark, and the report only lists what is above it.
 Tickets are queried with ``--state all`` on purpose: an item opened and closed
 between two scheduled runs is still an item this fork never triaged, and a pull
 request closed without merging never arrives on the commit axis at all.
+
+Branches are the fourth axis: work pushed to an upstream branch without a pull
+request shows up nowhere else. Their watermark is the head SHA last read per
+branch, so a branch is reported when it is new or its head has moved.
 """
 
 from __future__ import annotations
@@ -111,6 +115,51 @@ def collect_new_commits(baseline: dict, repo_dir: Path, ref: str) -> list[dict]:
     return commits
 
 
+def collect_branch_changes(baseline: dict, repo_dir: Path) -> list[dict]:
+    """Upstream branches, other than the tracked one, not read at their head."""
+    reviewed = baseline.get("reviewed_branch_heads") or {}
+    raw = run_git(["ls-remote", "--heads", baseline["repo"]], repo_dir)
+    changes = []
+    for line in raw.splitlines():
+        if not line.strip():
+            continue
+        sha, ref = line.split("\t", 1)
+        name = ref.removeprefix("refs/heads/")
+        if name == baseline["branch"] or reviewed.get(name) == sha:
+            continue
+        changes.append(
+            {"name": name, "sha": sha, "short": sha[:7], "previous": reviewed.get(name)}
+        )
+    return sorted(changes, key=lambda item: item["name"])
+
+
+def render_branch_section(branches: list[dict], decision_log: str) -> list[str]:
+    lines = ["## Upstream branches", ""]
+    if not branches:
+        lines.extend(["No new or moved branch heads.", ""])
+        return lines
+    lines.extend(
+        [
+            f"{len(branches)} branch head(s) to review.",
+            "",
+            "| Branch | Head | Previously reviewed |",
+            "| --- | --- | --- |",
+        ]
+    )
+    for branch in branches:
+        previous = f"`{branch['previous'][:7]}`" if branch["previous"] else "(new)"
+        lines.append(f"| `{branch['name']}` | `{branch['short']}` | {previous} |")
+    lines.extend(
+        [
+            "",
+            f"Record the verdict in `{decision_log}`, then set the full head SHA in",
+            "`reviewed_branch_heads` so the same head is never re-reviewed.",
+            "",
+        ]
+    )
+    return lines
+
+
 def upstream_slug(repo_url: str) -> str | None:
     """`https://github.com/owner/name.git` -> `owner/name`, or None if not GitHub."""
     match = re.search(
@@ -208,6 +257,7 @@ def render_markdown(
     prs: list[dict] | None = None,
     issues: list[dict] | None = None,
     error: str | None = None,
+    branches: list[dict] | None = None,
 ) -> str:
     decision_log = baseline.get("decision_log", DEFAULT_DECISION_LOG)
     lines = [
@@ -237,6 +287,7 @@ def render_markdown(
             "issue",
             decision_log,
         )
+        body += render_branch_section(branches or [], decision_log)
         return "\n".join(body)
 
     if not commits:
@@ -281,7 +332,10 @@ def main() -> int:
     parser.add_argument(
         "--strict",
         action="store_true",
-        help="Return non-zero when new commits, pull requests, or issues need review.",
+        help=(
+            "Return non-zero when new commits, pull requests, issues, or branch "
+            "heads need review."
+        ),
     )
     args = parser.parse_args()
 
@@ -289,6 +343,7 @@ def main() -> int:
     commits: list[dict] = []
     prs: list[dict] | None = None
     issues: list[dict] | None = None
+    branches: list[dict] = []
     error: str | None = None
     try:
         baseline = load_baseline()
@@ -296,6 +351,7 @@ def main() -> int:
         commits = collect_new_commits(baseline, args.repo_dir, ref)
         prs = collect_new_tickets(baseline, "pr")
         issues = collect_new_tickets(baseline, "issue")
+        branches = collect_branch_changes(baseline, args.repo_dir)
     except UpstreamCheckError as exc:
         error = str(exc)
         baseline = {
@@ -305,7 +361,7 @@ def main() -> int:
             "reviewed_date": "unknown",
         }
 
-    report = render_markdown(baseline, commits, prs, issues, error)
+    report = render_markdown(baseline, commits, prs, issues, error, branches)
     output = Path(args.output)
     output.write_text(report, encoding="utf-8")
     print(report)
@@ -322,7 +378,7 @@ def main() -> int:
         # allowed to read as a clean bill of health.
         print(f"ERROR: gh could not enumerate upstream {' and '.join(unavailable)}.")
         return 2
-    if args.strict and (commits or prs or issues):
+    if args.strict and (commits or prs or issues or branches):
         return 1
     return 0
 

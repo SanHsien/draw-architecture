@@ -52,3 +52,9 @@ README 衝突的解法：保留頂部 overlay，把上游新產品說明留在�
 水位現況：`reviewed_pr_through: 7`（`#1`–`#7` 全數處理完，理由見 `DECISIONS.md` 2026-08-29 條目）、
 `reviewed_issue_through: 0`（上游 issue 數為 0，查過為空）。`upstream-check.yml` 需要
 `GH_TOKEN: ${{ github.token }}`，少了它檢查器會 fail closed。
+
+## 2026-10-25：分支面向接上排程
+
+檢查器原本沒有分支收集。現在以 `git ls-remote --heads` 比對 baseline 的 `reviewed_branch_heads`，
+新分支或 head 移動才列出。上游 5 條非 `main` 分支的 patch 都已在 `0351ece` 內（證據見 `DECISIONS.md`
+2026-10-25 條目），水位記各自 head SHA。

@@ -43,7 +43,7 @@ code-scanning alerts → 0
 secret-scanning alerts → 0
 ```
 
-`CLAUDE.md` 是一般檔。上游 `docs/*.png` 保留；fork 文件在 `docs/fork/`。
+上游 `docs/*.png` 保留；fork 文件在 `docs/fork/`。
 
 ### GitHub Actions（overlay 落地 `62f720c`）
 

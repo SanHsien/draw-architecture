@@ -77,7 +77,7 @@
 2. `scripts/validate.js`／`scripts/build.js` 拒絕 scene 含 `</script>`；`build.js` 對 `TITLE`／`KICKER` 做 HTML escape、對 `SLUG` 做 JS 單引號 escape。不 escape `{{SUB_HTML}}`（strapline 仍允許少量 HTML）。
 3. `bin/cli.js` 加 `--cursor` → `~/.cursor/skills`；互動選單 4=Cursor、5=Custom；uninstall 預設也掃 Cursor 路徑。
 
-**理由**：主人指示 review 中可修的都修、先不回貢。產品信任模型核心仍是「本機 scene 由宿主 Agent 寫、用 `new Function` 執行」；護欄只擋模板破出與標題注入，不改 viewer 互動契約。
+**理由**：維護者指示 review 中可修的都修、先不回貢。產品信任模型核心仍是「本機 scene 由宿主 Agent 寫、用 `new Function` 執行」；護欄只擋模板破出與標題注入，不改 viewer 互動契約。
 
 **限制**：
 
@@ -112,3 +112,27 @@ PR 與 issue 的水位寫在 baseline 裡，沒有任何程式讀它。那兩個
 代表查過為空）。
 
 **觸發條件**：上游開出 `#8` 以後的 PR 或第一個 issue 時，排程會列出來，逐筆判斷後才推進水位。
+
+## 2026-10-25：上游檢查補上分支面向；ruff 0.17 以 freshness-hold 處理
+
+**決定**：`tools/check_upstream_updates.py` 以 `git ls-remote --heads` 收集上游分支，和 baseline 新欄位
+`reviewed_branch_heads`（分支名 → 已讀 head 的完整 SHA）比對；新分支或 head 移動才列出，`--strict` 會因此
+回 1。`requirements-dev.txt` 的 `ruff>=0.16` 加行末 `# freshness-hold:`，不提高下限。
+
+**理由**：`AGENTS.md` 與 `UPSTREAM.md` 寫「四個面向，分支記 head SHA」，但檢查器沒有分支收集，baseline 也
+沒有分支欄位——和 2026-08-29 的 PR／issue 同一種「寫了沒查」。ruff 在本 repo 只閘 E9／F（`pyproject.toml`），
+0.17.2 對 `tools/`、`tests/` 結果與 0.16 相同；下限是最低相容版，提高它只會逼既有環境升級，不改變閘門。
+
+**證據**：
+
+- `git ls-remote --heads https://github.com/yulonghe97/draw-architecture.git` → `main`（`0351ece`）以外 5 條：
+  `smilewilson1999/npx-draw-architecture-cli`（`b2a2017`）、`yulonghe97/npm-token-first-publish`（`01f1ea1`）
+  已是 `upstream/main` 祖先；`yulonghe97/dark-light-mode-switcher`（`cfbe227`）、`yulonghe97/fix-download-button`
+  （`1d7414c`）、`yulonghe97/readme-install-guide`（`d3d32d2`）各 1 筆未進 `main` 歷史，但 `git cherry upstream/main <branch>`
+  全為 `-`，即 patch 已以 squash 進 `main`（`e7ff347` #6、`2b57667` #3、`7b99433` #5）。五條都無需引進。
+- 上游 commit：`0351ece..upstream/main` 0 筆；PR／issue：2026-10-24 排程 `Upstream check`
+  （run `40094122768`）報告 PR 無 `#7` 以上、issue 無 `#0` 以上。
+- `ruff 0.17.2`：`ruff check tools tests` → All checks passed；pytest 全綠。
+
+**觸發條件**：上游推新分支或任一分支 head 移動時，排程列出，讀 diff 後才更新 `reviewed_branch_heads`。
+ruff 若改變 E9／F 判定、或 `tools/`／`tests/` 用到只有新版才有的設定時，拿掉 hold 並提高下限。
