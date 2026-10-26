@@ -32,6 +32,9 @@ function escapeJsSingleQuoted(s) {
   return String(s)
     .replace(/\\/g, '\\\\')
     .replace(/'/g, "\\'")
+    // `<` as an escape keeps `</script>` (and `<!--`) from ending the script
+    // element; the JS string still evaluates to the same characters.
+    .replace(/</g, '\\x3c')
     .replace(/\r|\n|\u2028|\u2029/g, '');
 }
 
@@ -50,12 +53,20 @@ if (/<\/script/i.test(scene)) {
   process.exit(1);
 }
 
-const html = template
-  .replace('{{TITLE}}', escapeHtml(title))
-  .replace('{{KICKER}}', escapeHtml(kicker))
-  .replace('{{SUB_HTML}}', sub)
-  .replace('{{SLUG}}', escapeJsSingleQuoted(slug))
-  .replace('{{SCENE}}', scene.replace(/\$/g, '$$$$'));
+// One pass with a function replacer: a string replacement would expand `$&`,
+// `$'` and `$$` inside values, and chained replaces would let a value that
+// contains `{{SCENE}}` steal the next slot.
+const values = {
+  TITLE: escapeHtml(title),
+  KICKER: escapeHtml(kicker),
+  SUB_HTML: sub,
+  SLUG: escapeJsSingleQuoted(slug),
+  SCENE: scene
+};
+const html = template.replace(
+  /\{\{(TITLE|KICKER|SUB_HTML|SLUG|SCENE)\}\}/g,
+  (_, key) => values[key]
+);
 
 fs.mkdirSync(path.dirname(path.resolve(outPath)), { recursive: true });
 fs.writeFileSync(outPath, html);

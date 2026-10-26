@@ -100,3 +100,38 @@ def test_shoply_scene_still_validates_after_breakout_guard() -> None:
         [str(ROOT / "scripts" / "validate.js"), str(SCENE)]
     )
     assert result.returncode == 0, result.stdout + result.stderr
+
+
+def _build(tmp_path: Path, *extra: str) -> str:
+    out = tmp_path / "index.html"
+    result = _run_node(
+        [
+            str(ROOT / "scripts" / "build.js"),
+            "--scene",
+            str(SCENE),
+            "--out",
+            str(out),
+            *extra,
+        ]
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    return out.read_text(encoding="utf-8")
+
+
+def test_build_keeps_dollar_sequences_in_title_literal(tmp_path: Path) -> None:
+    """`$&`, `$'` and `$$` are String.replace patterns, not title text."""
+    html = _build(tmp_path, "--title", "Save $& and $' now $$5", "--slug", "s")
+    assert "<title>Save $&amp; and $&#39; now $$5</title>" in html
+
+
+def test_build_does_not_expand_placeholders_typed_into_title(tmp_path: Path) -> None:
+    """A title containing `{{SCENE}}` must not hijack the real scene slot."""
+    html = _build(tmp_path, "--title", "{{SCENE}}", "--kicker", "{{SLUG}}", "--slug", "s")
+    assert "<title>{{SCENE}}</title>" in html
+    assert "const W = 1480, H = 1968;" in html
+    assert html.count("{{SCENE}}") == 1  # the title text only, slot was filled
+
+
+def test_build_slug_cannot_close_the_script_element(tmp_path: Path) -> None:
+    html = _build(tmp_path, "--title", "T", "--slug", "</script><script>alert(1)</script>")
+    assert "</script><script>alert(1)" not in html
