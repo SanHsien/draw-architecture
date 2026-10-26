@@ -10,6 +10,13 @@
 
 ---
 
+## 2026-10-26（深度掃描，`18d03d5`、`5113e3f`、`6d98508`）
+
+- `scripts/build.js`：改單趟函式替換，標題含 `$&`／`$'`／`$$` 或 `{{SCENE}}` 不再被展開或搶欄位；`--slug` 的 `<` 轉成 `\x3c`，不能再用 `</script>` 截斷 script。
+- `tools/check_upstream_updates.py`：系統沒有 `gh` 時回報「未檢查」（exit 2），不再 traceback。
+- `tools/check_links.py`：支援連結 title、略過 code fence、缺圖不重複回報。
+- `fork-maintenance.yml`：改 `scripts/`、`bin/`、`assets/`、`examples/`、`package.json` 也會觸發 fork gate。
+
 ## 2026-10-25（接續開發，`46ae0c0`、`0ef829e`）
 
 ### 變更

@@ -11,6 +11,13 @@ Per-commit adopt/skip reasoning is recorded in [`docs/fork/DECISIONS.md`](docs/f
 
 ---
 
+## 2026-10-26 (deep scan, `18d03d5`, `5113e3f`, `6d98508`)
+
+- `scripts/build.js`: single-pass function replacement, so `$&`/`$'`/`$$` or `{{SCENE}}` in a title are no longer expanded or hijack a slot; `--slug` escapes `<` as `\x3c` so `</script>` cannot end the script element.
+- `tools/check_upstream_updates.py`: a missing `gh` is reported as "not checked" (exit 2) instead of a traceback.
+- `tools/check_links.py`: handles link titles, skips code fences, reports a missing image once.
+- `fork-maintenance.yml`: changes to `scripts/`, `bin/`, `assets/`, `examples/`, `package.json` now trigger the fork gate.
+
 ## 2026-10-25 (continued development, `46ae0c0`, `0ef829e`)
 
 ### Changed
