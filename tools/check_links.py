@@ -16,7 +16,6 @@ from urllib.parse import unquote
 
 ROOT = Path(__file__).resolve().parent.parent
 LINK_PATTERN = re.compile(r"\[[^\]]*\]\(([^)]+)\)")
-IMAGE_PATTERN = re.compile(r"!\[[^\]]*\]\(([^)]+)\)")
 HTML_SRC_PATTERN = re.compile(r"""(?is)<img[^>]+src=["']([^"']+)["']""")
 SKIP_PREFIXES = ("http://", "https://", "mailto:", "tel:", "#")
 SKIP_NAMES = {
@@ -65,12 +64,20 @@ def _missing_relative(path: Path, target: str) -> str | None:
     return f"{target} → 找不到 {shown}"
 
 
+FENCE_PATTERN = re.compile(r"(?ms)^[ \t]*(```|~~~).*?^[ \t]*\1[^\n]*$")
+TITLE_SUFFIX = re.compile(r"""\s+(?:"[^"]*"|'[^']*')\s*$""")
+
+
 def check_document(path: Path) -> list[str]:
     problems: list[str] = []
-    text = path.read_text(encoding="utf-8")
-    for pattern in (LINK_PATTERN, IMAGE_PATTERN, HTML_SRC_PATTERN):
+    # Fenced blocks hold examples, not links; `[x](y)` in them is not a promise.
+    text = FENCE_PATTERN.sub("", path.read_text(encoding="utf-8"))
+    # An image is also matched by LINK_PATTERN; a separate image pattern would
+    # report the same missing file twice.
+    for pattern in (LINK_PATTERN, HTML_SRC_PATTERN):
         for match in pattern.finditer(text):
-            missing = _missing_relative(path, match.group(1))
+            target = TITLE_SUFFIX.sub("", match.group(1))
+            missing = _missing_relative(path, target)
             if missing:
                 problems.append(missing)
     return problems

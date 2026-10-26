@@ -16,6 +16,11 @@ on:
       - CHANGELOG.en.md
       - docs/fork/**
       - tools/**
+      - scripts/**
+      - bin/**
+      - assets/**
+      - examples/**
+      - package.json
       - tests/**
       - requirements-dev.txt
       - pyproject.toml

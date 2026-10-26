@@ -378,3 +378,38 @@ def test_no_tracked_git_symlinks() -> None:
     for line in result.stdout.splitlines():
         mode = line.split(None, 1)[0]
         assert mode != "120000", line
+
+
+def _check_text(monkeypatch, tmp_path: Path, text: str) -> list[str]:
+    monkeypatch.setattr(check_links, "ROOT", tmp_path)
+    (tmp_path / "exists.md").write_text("x", encoding="utf-8")
+    doc = tmp_path / "doc.md"
+    doc.write_text(text, encoding="utf-8")
+    return check_links.check_document(doc)
+
+
+def test_link_with_title_is_checked_against_its_path(monkeypatch, tmp_path: Path) -> None:
+    assert _check_text(monkeypatch, tmp_path, '[x](exists.md "A title")\n') == []
+    assert _check_text(monkeypatch, tmp_path, "[x](exists.md 'A title')\n") == []
+
+
+def test_links_inside_code_fences_are_examples_not_links(monkeypatch, tmp_path: Path) -> None:
+    text = "```md\n[demo](no-such-file.md)\n```\n"
+    assert _check_text(monkeypatch, tmp_path, text) == []
+
+
+def test_missing_image_is_reported_once(monkeypatch, tmp_path: Path) -> None:
+    assert len(_check_text(monkeypatch, tmp_path, "![a](gone.png)\n")) == 1
+
+
+def test_real_missing_link_is_still_reported(monkeypatch, tmp_path: Path) -> None:
+    assert len(_check_text(monkeypatch, tmp_path, '[x](gone.md "t")\n')) == 1
+
+
+def test_fork_maintenance_runs_when_tested_product_code_changes() -> None:
+    """tests/ exercise scripts/, bin/ and the template; editing them must run the gate."""
+    text = (ROOT / ".github" / "workflows" / "fork-maintenance.yml").read_text(
+        encoding="utf-8"
+    )
+    for watched in ("scripts/**", "bin/**", "assets/**", "examples/**", "package.json"):
+        assert f"      - {watched}\n" in text, watched
