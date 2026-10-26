@@ -192,3 +192,13 @@ def test_strict_fails_when_only_a_branch_head_moved(monkeypatch, tmp_path):
         sys, "argv", ["check", "--strict", "--output", str(tmp_path / "r.md")]
     )
     assert checker.main() == 1
+
+
+def test_missing_gh_binary_reports_unchecked_rather_than_crashing(monkeypatch):
+    """No `gh` on PATH raises FileNotFoundError, not a non-zero exit code."""
+
+    def runner(args, **kwargs):
+        raise FileNotFoundError(2, "No such file or directory", "gh")
+
+    monkeypatch.setattr(checker.subprocess, "run", runner)
+    assert checker.collect_new_tickets(BASELINE, "pr") is None
