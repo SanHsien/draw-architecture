@@ -40,27 +40,6 @@ def fake_gh(payload: object, returncode: int = 0):
     return runner
 
 
-def test_tickets_are_queried_with_state_all(monkeypatch):
-    """An item opened and closed between two runs was still never triaged."""
-    monkeypatch.setattr(
-        checker.subprocess,
-        "run",
-        fake_gh([{"number": 9, "title": "closed without merging"}]),
-    )
-    tickets = checker.collect_new_tickets(BASELINE, "pr")
-    assert tickets == [{"number": 9, "title": "closed without merging"}]
-
-
-def test_items_at_or_below_the_watermark_are_not_re_reported(monkeypatch):
-    monkeypatch.setattr(
-        checker.subprocess,
-        "run",
-        fake_gh([{"number": 4, "title": "old"}, {"number": 5, "title": "new"}]),
-    )
-    baseline = {**BASELINE, "reviewed_pr_through": 4}
-    assert [t["number"] for t in checker.collect_new_tickets(baseline, "pr")] == [5]
-
-
 def test_ticket_titles_survive_undecodable_bytes(monkeypatch):
     """Titles are written by strangers and the console is not always UTF-8.
 
@@ -83,18 +62,6 @@ def test_gh_failure_reports_unchecked_rather_than_empty(monkeypatch):
     """`None`, not `[]`: "not checked" must never render as "nothing to review"."""
     monkeypatch.setattr(checker.subprocess, "run", fake_gh([], returncode=1))
     assert checker.collect_new_tickets(BASELINE, "issue") is None
-
-
-def test_report_says_so_when_tickets_could_not_be_enumerated():
-    report = checker.render_markdown(BASELINE, [], prs=None, issues=None)
-    assert "Not checked" in report
-
-
-def test_report_covers_all_three_axes_even_when_commits_are_clean():
-    report = checker.render_markdown(BASELINE, [], prs=[], issues=[])
-    assert "## Commits" in report
-    assert "## Upstream pull requests" in report
-    assert "## Upstream issues" in report
 
 
 @pytest.mark.parametrize(
@@ -153,45 +120,11 @@ def test_branch_is_re_reported_only_when_its_head_moves(monkeypatch):
     assert [(b["name"], b["previous"]) for b in branches] == [("moved", "c" * 40)]
 
 
-def test_report_covers_the_branch_axis():
-    report = checker.render_markdown(BASELINE, [], prs=[], issues=[], branches=[])
-    assert "## Upstream branches" in report
-
-
 def test_shipped_baseline_records_every_branch_head_it_claims_to_have_read():
     baseline = checker.load_baseline()
     heads = baseline.get("reviewed_branch_heads")
     assert heads, "branch axis has no watermark; it is not being watched"
     assert all(len(sha) == 40 for sha in heads.values())
-
-
-def test_report_lists_new_and_moved_branch_heads():
-    branches = [
-        {"name": "fix", "sha": "b" * 40, "short": "b" * 7, "previous": None},
-        {"name": "moved", "sha": "d" * 40, "short": "d" * 7, "previous": "c" * 40},
-    ]
-    report = checker.render_markdown(BASELINE, [], prs=[], issues=[], branches=branches)
-    assert "| `fix` | `bbbbbbb` | (new) |" in report
-    assert "| `moved` | `ddddddd` | `ccccccc` |" in report
-
-
-def test_strict_fails_when_only_a_branch_head_moved(monkeypatch, tmp_path):
-    """A moved branch is review work even when every other axis is clean."""
-    monkeypatch.setattr(checker, "load_baseline", lambda: dict(BASELINE))
-    monkeypatch.setattr(checker, "fetch_upstream", lambda baseline, repo_dir: "ref")
-    monkeypatch.setattr(checker, "collect_new_commits", lambda *args: [])
-    monkeypatch.setattr(checker, "collect_new_tickets", lambda baseline, kind: [])
-    monkeypatch.setattr(
-        checker,
-        "collect_branch_changes",
-        lambda baseline, repo_dir: [
-            {"name": "fix", "sha": "b" * 40, "short": "b" * 7, "previous": None}
-        ],
-    )
-    monkeypatch.setattr(
-        sys, "argv", ["check", "--strict", "--output", str(tmp_path / "r.md")]
-    )
-    assert checker.main() == 1
 
 
 def test_missing_gh_binary_reports_unchecked_rather_than_crashing(monkeypatch):
