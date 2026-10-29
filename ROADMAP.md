@@ -4,7 +4,7 @@
 > 現況段的數字是 2026-10-29 依 `main` `00ee0ead9774` 查的快照，開工前先重查 GitHub。
 
 ## 現況
-本 repo 為 yulonghe97/draw-architecture 的維護 fork，將系統架構轉換為可互動探索的 Canvas 架構圖技能。目前健康狀況良好，CI、CodeQL、Upstream check、Fork maintenance 與 Validate scene 全綠，所有工作流程運作正常；Issues 維持停用，無待處理 open PR 與安全告警。
+本 repo 為 yulonghe97/draw-architecture 的維護 fork，將系統架構轉換為可互動探索的 Canvas 架構圖技能。CI、CodeQL、Upstream check、Fork maintenance 與 Validate scene 在 `main` 最近一次皆 success；Issues 停用（issue 數未查到，不是 0），open PR 與 Dependabot／code scanning 告警皆 0（2026-10-29 `gh` 查詢）。
 
 ## 近期：可以直接動手
 | 項目 | 為什麼 | 驗收方式 | 建議執行者 | 證據 |
