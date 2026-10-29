@@ -406,6 +406,31 @@ def test_real_missing_link_is_still_reported(monkeypatch, tmp_path: Path) -> Non
     assert len(_check_text(monkeypatch, tmp_path, '[x](gone.md "t")\n')) == 1
 
 
+def test_link_checker_catches_case_mismatches_on_disk(
+    monkeypatch, tmp_path: Path
+) -> None:
+    monkeypatch.setattr(check_links, "ROOT", tmp_path)
+    sub = tmp_path / "SubDir"
+    sub.mkdir()
+    (sub / "Target.md").write_text("content", encoding="utf-8")
+    doc = tmp_path / "doc.md"
+
+    doc.write_text("[ok](SubDir/Target.md)\n", encoding="utf-8")
+    assert check_links.check_document(doc) == []
+
+    doc.write_text("[wrong-file](SubDir/target.md)\n", encoding="utf-8")
+    problems = check_links.check_document(doc)
+    assert len(problems) == 1
+    assert "大小寫不符" in problems[0]
+    assert "Target.md" in problems[0]
+
+    doc.write_text("[wrong-dir](subdir/Target.md)\n", encoding="utf-8")
+    problems = check_links.check_document(doc)
+    assert len(problems) == 1
+    assert "大小寫不符" in problems[0]
+    assert "SubDir" in problems[0]
+
+
 def test_fork_maintenance_runs_when_tested_product_code_changes() -> None:
     """tests/ exercise scripts/, bin/ and the template; editing them must run the gate."""
     text = (ROOT / ".github" / "workflows" / "fork-maintenance.yml").read_text(

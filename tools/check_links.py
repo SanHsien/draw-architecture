@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import re
 import sys
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from urllib.parse import unquote
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -55,13 +55,33 @@ def _missing_relative(path: Path, target: str) -> str | None:
     resolved = (path.parent / file_part).resolve()
     if not resolved.is_relative_to(ROOT):
         return f"{target} → 逃出 repo 根目錄"
-    if resolved.exists():
-        return None
     try:
         shown = resolved.relative_to(ROOT)
     except ValueError:
         shown = resolved
-    return f"{target} → 找不到 {shown}"
+
+    current = path.parent.resolve()
+    posix_path = PurePosixPath(file_part.replace("\\", "/"))
+    for part in posix_path.parts:
+        if part in (".", ""):
+            continue
+        if part == "..":
+            current = current.parent
+            continue
+        if not current.is_dir():
+            return f"{target} → 找不到 {shown}"
+        try:
+            entries = [entry.name for entry in current.iterdir()]
+        except OSError:
+            return f"{target} → 找不到 {shown}"
+        if part not in entries:
+            cased = [entry for entry in entries if entry.casefold() == part.casefold()]
+            if cased:
+                return f"{target} → 大小寫不符（磁碟真實名稱為 {cased[0]}）"
+            return f"{target} → 找不到 {shown}"
+        current = current / part
+
+    return None
 
 
 FENCE_PATTERN = re.compile(r"(?ms)^[ \t]*(```|~~~).*?^[ \t]*\1[^\n]*$")
