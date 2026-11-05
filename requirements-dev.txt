@@ -1,2 +1,2 @@
-pytest>=9.1
+pytest>=9.1  # freshness-hold: 相容性下限；9.1.0 測試全綠，9.2.0 由 Windows gate 驗證；未使用新版專屬功能
 ruff>=0.16  # freshness-hold: 只閘 E9/F；0.17.2 已驗證 tools/、tests/ 全綠，下限維持最低相容版

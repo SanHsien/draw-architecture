@@ -14,6 +14,7 @@
 | 項目 | 觸發條件 | 驗收方式 | 建議執行者 | 證據 |
 | --- | --- | --- | --- | --- |
 | 解除 ruff freshness-hold，提高下限 | ruff 改變 E9／F 判定，或 `tools/`／`tests/` 用到只有新版才有的設定（`docs/fork/DECISIONS.md:138`） | `requirements-dev.txt` 移除 `freshness-hold` 註解並提高下限；`ruff check .` 與 `pytest tests -q` 綠；Dependency freshness 綠 | Claude Haiku | `requirements-dev.txt:2`；`docs/fork/DECISIONS.md:116-138` |
+| 重評 pytest freshness-hold 與下限 | 測試或設定使用 pytest 9.2+ 專屬功能，或 9.1 相容性驗證失敗 | 依相容性證據調整下限與 hold；Windows gate 與 strict freshness 綠 | Codex | `requirements-dev.txt:1`；`docs/fork/DECISIONS.md`（2026-11-05 決策） |
 | 同步上游新提交與畫布模板更新 | `Upstream check` workflow 轉為 failure 或上游 main 有新 commit | 執行 `python tools/check_upstream_updates.py`，完成審查並更新 `tools/upstream_baseline.json`，`tools/dev_check.ps1` 綠燈 | Codex | `tools/upstream_baseline.json`；`tools/check_upstream_updates.py` |
 | 修復 bin/cli.js 參數解析邊界（--dir 後接選項被當路徑） | 上游合併該修復，或維護者決定在 fork 加入本機 CLI 防護 overlay | `tests/` 新增 pytest 案例：`node bin/cli.js --dir --force` 會報錯或拒絕，cwd 不會出現 `--force` 目錄；`pytest tests -q` 綠 | Codex | 深掃報告（2026-10-26）；`bin/cli.js`；既有 CLI 測試 `tests/test_fork_overlay.py:200-231` |
 

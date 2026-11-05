@@ -11,6 +11,10 @@ Per-commit adopt/skip reasoning is recorded in [`docs/fork/DECISIONS.md`](docs/f
 
 ---
 
+## 2026-11-05
+
+- Add `freshness-hold` to `pytest>=9.1` to retain the compatibility floor; validate tests with 9.1.0 and the Windows gate with 9.2.0 / ruff 0.17.3 without raising the declared minimum.
+
 ## 2026-10-26 (deep scan, `18d03d5`, `5113e3f`, `6d98508`)
 
 - `scripts/build.js`: single-pass function replacement, so `$&`/`$'`/`$$` or `{{SCENE}}` in a title are no longer expanded or hijack a slot; `--slug` escapes `<` as `\x3c` so `</script>` cannot end the script element.

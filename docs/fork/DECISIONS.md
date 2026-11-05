@@ -136,3 +136,16 @@ PR 與 issue 的水位寫在 baseline 裡，沒有任何程式讀它。那兩個
 
 **觸發條件**：上游推新分支或任一分支 head 移動時，排程列出，讀 diff 後才更新 `reviewed_branch_heads`。
 ruff 若改變 E9／F 判定、或 `tools/`／`tests/` 用到只有新版才有的設定時，拿掉 hold 並提高下限。
+
+## 2026-11-05：pytest 下限以 freshness-hold 保留相容性
+
+**決定**：`pytest>=9.1` 加行末 `freshness-hold`，不提高下限、不新增 lockfile；沿用 ruff 的既有 hold。
+這是最低相容版政策，正常 `pip install --upgrade -r requirements-dev.txt` 仍會安裝最新版。
+
+**理由與證據**：新鮮度檢查將 pytest 9.1 → 9.2.0 列為 `REVIEW UPDATE`，但宣告是範圍而非精確釘版。
+pytest 9.1.0 的 `python -m pytest tests -q` 全部通過；最新版 pytest 9.2.0 與 ruff 0.17.3
+以 `pwsh -NoProfile -File tools/dev_check.ps1` 驗證。未使用必須提高 pytest 下限的功能。
+已對照 [pytest 9.2.0 變更紀錄](https://docs.pytest.org/en/stable/changelog.html#pytest-9-2-0-2026-10-27)，
+不把新版可用誤當成舊版不相容；strict 檢查保留最新版與 hold 原因供審查，不修改檢查器或 workflow。
+
+**觸發條件**：測試或設定開始使用 pytest 9.2+ 專屬功能，或 9.1 相容性驗證失敗時，重新評估下限與 hold。
